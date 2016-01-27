@@ -8,7 +8,7 @@ This software demonstrates autonomous steering using the goal-aligned xetrov (GA
 
 ## Requirements
 
-Developed using Lua v5.2. Depends on Love2D v0.9.2.
+Developed using [Lua](http://www.lua.org/) v5.2.3. Depends on [Love2D](https://love2d.org/) v0.9.2.
 
 ## Running the demonstrations
 
