@@ -4,7 +4,7 @@
 
 ## Overview
 
-This software demonstrates autonomous steering using the goal-aligned xetrov (GAX) system. Character steering is achieved using steering behaviours. Collision avoidance is achieved using the GAX system, which uses the concept of artificial potential to guide characters around nearby obstacles.
+This software demonstrates autonomous steering using the goal-aligned xetrov (GAX) system. Character steering is achieved using [steering behaviours](http://www.red3d.com/cwr/steer/gdc99/). Collision avoidance is achieved using the GAX system, which uses the concept of artificial potential to guide characters around nearby obstacles.
 
 ## Requirements
 
