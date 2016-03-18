@@ -19,25 +19,33 @@ function love.load(arg)
     -- Set scenario.
     local selection = scenarios[arg[2]]
     if selection == nil then
-        arg[2] = 'survive'
-        print('No scenario selected; presenting default')
+        print('No scenario selected. Please enter one of:')
+        print('\tambulate')
+        print('\tescape')
+        print('\tflock')
+        print('\tpanic')
+        print('\tsurvive')
+        love.event.quit()
     else
         print('Presenting ' .. arg[2] .. ' scenario')
+        world = require(scenarios[arg[2]])
+
+        -- Configure window.
+        local window_flags = {}
+        window_flags['vsync'] = false
+        window_flags['fullscreen'] = false
+        love.window.setMode(world.width, world.height, window_flags)
+
+        -- Set graphical options.
+        love.filesystem.setIdentity('gax')
+        love.window.setTitle('GAX ' .. arg[2])
+        love.graphics.setPointSize(5)
+        love.graphics.setBackgroundColor(ColourCode.background)
+
+        -- Print information that may be useful for user.
+        local dir = love.filesystem.getSaveDirectory()
+        print(string.format('Save directory: %s', dir))
     end
-    world = require(scenarios[arg[2]])
-
-    -- Configure window.
-    local window_flags = {}
-    window_flags['fsaa'] = 4
-    window_flags['vsync'] = false
-    window_flags['fullscreen'] = false
-    love.window.setMode(world.width, world.height, window_flags)
-
-    -- Set graphical options.
-    love.filesystem.setIdentity('gax')
-    love.window.setTitle('GAX ' .. arg[2])
-    love.graphics.setPointSize(5)
-    love.graphics.setBackgroundColor(ColourCode.background)
 end
 
 --- Callback for responding to user input through Love2D.
@@ -47,11 +55,13 @@ function love.keypressed(key, isrepeat)
         love.event.quit()
     end
 
-    if key == 'p' and not isrepeat then
+    if key == 'space' then
         -- Take a screenshot.
         local date = os.date('%d%m%Y-%H%M%S')
-        local name = string.format('screenshot-%s.png', date)
-        love.graphics.newScreenshot():encode(name)
+        local clock = os.clock()
+        local name = string.format('%s_%s.png', date, clock)
+        print(string.format('Saving screenshot: %s', name))
+        love.graphics.newScreenshot():encode('png', name)
     end
 end
 
@@ -65,9 +75,4 @@ end
 function love.draw()
     love.graphics.origin()
     world:draw()
-
-    -- Take a screenshot.
-    local date = os.date('%d%m%Y-%H%M%S')
-    local name = string.format('screenshot-%s.png', date)
-    love.graphics.newScreenshot():encode(name)
 end
