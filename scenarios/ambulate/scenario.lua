@@ -48,7 +48,9 @@ local create_pedestrian = function(position, direction)
 
     -- Create vehicle.
     local vehicle = Vehicle('pedestrian', position, character_disk)
-    vehicle:set_targets(5, 25, 25)
+    speed = 20 + 10 * math.random()
+    rate = 3 + 3 * math.random()
+    vehicle:set_targets(rate, speed, speed)
 
     -- Create pedestrian.
     local pedestrian = Pedestrian(colour, vehicle, 50, point)

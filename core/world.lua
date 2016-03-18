@@ -23,7 +23,7 @@ function World:init(toroidal, width, height, scale)
 
     -- configure data for implementing toroidal space
     self.toroidal = toroidal
-    
+
     if self.toroidal then
         self.point_matrix = {}
 
@@ -150,7 +150,7 @@ function World:draw()
     -- Determine the mouse position in the graphical window.
     local mouse_pos = Vector2(love.mouse.getPosition())
     mouse_pos = mouse_pos - self.camera
-    
+
     love.graphics.push()
 
     -- Apply global geometric transformations.
