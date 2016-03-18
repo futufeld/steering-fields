@@ -188,12 +188,6 @@ function World:draw()
             character:draw()
         end
     end
-    
-    -- Render cursor at mouse position.
-    love.graphics.push()
-    love.graphics.translate(mouse_pos.x, mouse_pos.y)
-    love.graphics.point(0, 0)
-    love.graphics.pop()
 
     love.graphics.pop()
 end

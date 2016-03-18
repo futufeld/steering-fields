@@ -36,7 +36,6 @@ function love.load(arg)
     -- Set graphical options.
     love.filesystem.setIdentity('gax')
     love.window.setTitle('GAX ' .. arg[2])
-    love.mouse.setVisible(false)
     love.graphics.setPointSize(5)
     love.graphics.setBackgroundColor(ColourCode.background)
 end
