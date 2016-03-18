@@ -8,12 +8,12 @@ local Predator = TableUtils.class(Character)
 
 -- Predator implementation of function g(d).
 local gx_default = function (ratio)
-    return (1 - ratio)^4
+    return (1 - ratio)^2
 end
 
 -- Predator implementation of function h(d).
 local hx_default = function (ratio)
-    return ratio^0.25
+    return ratio^0.5
 end
 
 -- Set the default collision avoidance profile of the predator.

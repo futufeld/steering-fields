@@ -20,7 +20,7 @@ end
 
 --- Escape-specific implementation for h(x).
 function Escape.hx(ratio)
-    return ratio^0.25
+    return ratio^0.5
 end
 
 --- Returns the desired velocity of the vehicle if it is to escape its
