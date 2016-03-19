@@ -1,6 +1,7 @@
 local TableUtils      = require('utils.class')
 local Vector2         = require('geometry.vector2')
 local DiskObstacle    = require('geometry.disk')
+local PolygonObstacle = require('geometry.polygon')
 local SegSeqObstacle  = require('geometry.segseq')
 local Obstacle        = require('core.obstacle')
 local Vehicle         = require('core.vehicle')
@@ -41,6 +42,11 @@ local create_flock = function (centre, colour)
         world:add_character(boid)
     end
 end
+
+-- Create obstacle.
+local points = ScenarioHelpers.radial_points(Vector2(), 75, 7)
+local obstacle = Obstacle('obstacle', Vector2(), PolygonObstacle(points))
+world:add_obstacle(obstacle)
 
 -- Create flocks.
 create_flock(Vector2(-200, 0), ColourCodes.vehicle)
