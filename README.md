@@ -1,4 +1,4 @@
-# GAX Steering Demonstrations
+# Demonstrations of the Steering Fields System
 
 ![Screenshot](screenshot.gif)
 
