@@ -11,19 +11,14 @@ function PolygonObstacle:init(points)
     PolyObstacle.init(self, points)
 end
 
---- Tests if given point is inside obstacle.
+--- Returns whether 'point' is inside this polygon.
 function PolygonObstacle:is_inside(point)
     return GeometryUtils.is_inside_polygon(point, self.points)
 end
 
---- Returns an iterator over the edges of this obstacle.
+--- Returns a pairwise iterator over the edges of this polygon.
 function PolygonObstacle:iterator()
     return IteratorUtils.pairloop(self.points)
-end
-
---- Renders the obstacle.
-function PolygonObstacle:draw()
-    love.graphics.polygon('fill', self.coordinates)
 end
 
 return PolygonObstacle

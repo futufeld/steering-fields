@@ -8,91 +8,79 @@ local Escape     = require('steering.escape')
 local Prey = TableUtils.class(Character)
 
 -- Prey implementation of function g(d).
-local gx_default = function (ratio)
-    return 1 - ratio
-end
+local gx_default = function (ratio) return (1 - ratio)^2 end
 
 -- Prey implementation of function h(d).
-local hx_default = function (ratio)
-    return ratio^0.5
-end
+local hx_default = function (ratio) return ratio^0.5 end
 
 -- Set the collision avoidance profile of the prey character.
 Prey.params_gx = TableUtils.default(gx_default)
 Prey.params_hx = TableUtils.default(hx_default)
 
 -- Set prey-specific attributes.
-Prey.sight_distance = 150
-Prey.home_range = 100
+Prey.HOME_RANGE = 100
+Prey.SIGHT_RANGE = 150
 
 --- Define prey state enumeration.
-local PreyState = {}
-PreyState.FORAGE = 0
-PreyState.ESCAPE = 1
-PreyState.HOME   = 2
+local PreyState = { FORAGE = 0, ESCAPE = 1, HOME = 2 }
 
 -- Initialises a Prey instance.
-function Prey:init(colour, vehicle, sight_range, home)
-    Character.init(self, colour, vehicle, sight_range)
+function Prey:init(vehicle, home)
+    Character.init(self, vehicle)
     self.home_position = home
     self:set_forage_state()
     self.knowledge = nil
 end
 
---- Returns the prey's distance from its home.
-function Prey:home_distance()
-    return (self.vehicle.position - self.home_position):len()
-end
-
 --- Sets the state and behaviour of this prey to FORAGE.
 function Prey:set_forage_state()
-    self.vehicle:set_targets(0, 75, 75)
-    self:set_steering(Wander, {75, 50, 10})
+    self.vehicle:set_limits(75, 75)
+    self.steering = Wander(75, 50, 10)
     self.state = PreyState.FORAGE
 end
 
 --- Sets the state and behaviour of this prey to ESCAPE.
 function Prey:set_escape_state(predator)
-    self.vehicle:set_targets(0, 150, 150)
-    self:set_steering(Escape, {{predator}})
+    self.vehicle:set_limits(150, 150)
+    self.steering = Escape({predator})
     self.state = PreyState.ESCAPE
 end
 
 --- Sets the state and behaviour of this prey to HOME.
 function Prey:set_home_state()
-    self.vehicle:set_targets(0, 75, 75)
-    self:set_steering(Seek, {self.home_position})
+    self.vehicle:set_limits(75, 75)
+    self.steering = Seek(self.home_position)
     self.state = PreyState.HOME
 end
 
 --- Defines behaviour of this prey when in the FORAGE state.
 function Prey:forage()
-    if self:home_distance() > Prey.home_range + 75 then
-        self:set_home_state()
-    end
-
-    local predator = self:sense('predator')
+    local predator = self:sense_nearest('character2')
     if predator ~= nil then
         self:set_escape_state(predator)
+    else
+        if self:distance(self.home_position) > Prey.HOME_RANGE + 75 then
+            self:set_home_state()
+        end
     end
 end
 
 --- Defines behaviour of this prey when in the ESCAPE state.
 function Prey:escape()
-    if not self:can_sense('predator') then
+    if not self:can_sense('character2') then
         self:set_home_state()
     end
 end
 
 --- Defines behaviour of this prey when in the HOME state.
 function Prey:home()
-    if self:home_distance() < Prey.home_range then
-        self:set_forage_state()
-    end
-    
-    local predator = self:sense('predator')
+    local predator = self:sense_nearest('character2')
     if predator ~= nil then
         self:set_escape_state(predator)
+    else
+        if self:distance(self.home_position) < Prey.HOME_RANGE then
+            self:set_forage_state()
+        end
     end
 end
 
@@ -102,15 +90,18 @@ function Prey:update(delta_time, entities)
 
     if self.state == PreyState.FORAGE then
         self:forage()
-    end
-    if self.state == PreyState.ESCAPE then
+    elseif self.state == PreyState.ESCAPE then
         self:escape()
-    end
-    if self.state == PreyState.HOME then
+    elseif self.state == PreyState.HOME then
         self:home()
     end
 
-    self:move(delta_time, entities)
+    Character.update(self, delta_time, entities)
+end
+
+--- Returns whether this character can see 'entity'.
+function Prey:can_see(entity)
+    return self:distance(entity.position) < Prey.SIGHT_RANGE
 end
 
 return Prey

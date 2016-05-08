@@ -11,7 +11,7 @@ function SegSeqObstacle:init(points)
     PolyObstacle.init(self, points)
 end
 
---- Tests if given point is inside obstacle.
+--- Returns whether 'point' is on this segment sequence.
 function SegSeqObstacle:is_inside(point)
     local iterator = self:iterator()
     local vertex1, vertex2 = iterator()
@@ -22,14 +22,9 @@ function SegSeqObstacle:is_inside(point)
     return result
 end
 
---- Returns an iterator over edges of this obstacles.
+--- Returns a pairwise iterator over the edges of this obstacle.
 function SegSeqObstacle:iterator()
     return IteratorUtils.pairwise(self.points)
-end
-
---- Renders the obstacle.
-function SegSeqObstacle:draw()
-    love.graphics.line(self.coordinates)
 end
 
 return SegSeqObstacle

@@ -14,20 +14,9 @@ local hx_default = function (ratio) return ratio^0.5 end
 Pedestrian.params_gx = TableUtils.default(gx_default)
 Pedestrian.params_hx = TableUtils.default(hx_default)
 
---- Initialises a Pedestrian instance.
-function Pedestrian:init(colour, vehicle, sight_range, destination)
-    Character.init(self, colour, vehicle, sight_range)
-    self.destination = destination
-end
-
---- Returns the orientation vector of the GAX field for this pedestrian.
-function Pedestrian:orientation_vector()
-    return (self.destination - self.vehicle.position):unit()
-end
-
---- Returns the maximum avoidance distance of this character.
-function Pedestrian:get_avoid_range()
-    return self.vehicle.max_force * 2
+-- Sets the character's perturbation alignment to its desired velocity.
+function Pedestrian:alignment()
+    return self.steering:desired_velocity(self.vehicle)
 end
 
 return Pedestrian

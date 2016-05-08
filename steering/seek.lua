@@ -1,27 +1,22 @@
 local TableUtils = require('utils.class')
 local Vector2    = require('geometry.vector2')
 
---- Implements seek steering behaviour.
+--- Implements the seek behaviour algorithm.
 local Seek = TableUtils.class()
 
 --- Initialises Seek class instances.
-function Seek:init(vehicle, position)
-    self.vehicle = vehicle
-    self.position = position
+function Seek:init(position)
+    self.goal = position
 end
 
---- Returns the desired velocity of the vehicle if it is to seek towards a
--- target position.
-function Seek:desired_velocity()
-    local offset = Seek.world:point(self.vehicle.position, self.position)
-    local direction = (self.position + offset) - self.vehicle.position
-    
-    local distance = direction:len()
-    if distance < Vector2.DELTA then
-        return Vector2()
-    end
+--- Returns the seek desired velocity for 'vehicle'.
+function Seek:desired_velocity(vehicle)
+    local offset = vehicle.space:offset(vehicle.position, self.goal)
+    local direction = (self.goal + offset) - vehicle.position
 
-    return direction * (self.vehicle.max_force / distance)
+    local distance = direction:len()
+    if distance < 1e-5 then return Vector2() end
+    return direction * (vehicle.max_force / distance)
 end
 
 return Seek

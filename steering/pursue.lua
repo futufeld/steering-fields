@@ -1,37 +1,34 @@
-
 local TableUtils = require('utils.class')
 local Vector2    = require('geometry.vector2')
 local Seek       = require('steering.seek')
 
---- Implements Pursue steering behaviour.
+--- Implements the pursue behaviour algorithm.
 local Pursue = TableUtils.class(Seek)
 
 --- Initialises Pursue class instances.
-function Pursue:init(vehicle, target, max_prediction)
-    Seek.init(self, vehicle, Vector2())
-
+function Pursue:init(target, max_prediction)
+    Seek.init(self, Vector2())
     self.target = target
     self.max_prediction = max_prediction
 end
 
---- Returns the desired velocity of the vehicle if it is to pursue its target.
-function Pursue:desired_velocity()
+--- Returns the pursue desired velocity for 'vehicle'.
+function Pursue:desired_velocity(vehicle)
     -- Determine direction and distance to pursued vehicle.
-    local offset = Pursue.world:point( self.vehicle.position
-                                     , self.target.position )
-    local direction = (self.target.position+offset) - self.vehicle.position
-    local distance = direction:len()
+    local offset = vehicle.space:offset( vehicle.position,
+                                         self.target.position )
+    local position = self.target.position + offset
+    local distance = (position - vehicle.position):len()
 
-    -- Predict how long it will take to close the gap to that vehicle.
+    -- Predict how long it will take to reach the target.
     local prediction = self.max_prediction
-    if self.vehicle.speed >= distance / self.max_prediction then
-        prediction = distance / self.vehicle.speed
+    if vehicle.speed >= distance / self.max_prediction then
+        prediction = distance / vehicle.speed
     end
 
-    -- Offset seek position and seek towards it.
-    local factor = self.target.velocity * prediction
-    self.position = self.target.position + factor
-    return Seek.desired_velocity(self)
+    -- Set the goal point to the predicted position and invoke Seek.
+    self.goal = self.target.position + self.target.velocity * prediction
+    return Seek.desired_velocity(self, vehicle)
 end
 
 return Pursue

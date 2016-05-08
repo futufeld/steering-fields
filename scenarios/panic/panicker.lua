@@ -15,9 +15,9 @@ local hx = function (ratio) return ratio^0.5 end
 Panicker.params_gx = TableUtils.default(gx)
 Panicker.params_hx = TableUtils.default(hx)
 
--- Set orientation vector to distant point.
-function Panicker:orientation_vector()
-    return (Vector2(-10000, 0) - self.vehicle.position):unit()
+-- Sets the character's perturbation alignment to its desired velocity.
+function Panicker:alignment()
+    return self.steering:desired_velocity(self.vehicle)
 end
 
 return Panicker

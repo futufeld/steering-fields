@@ -1,18 +1,21 @@
 local TableUtils    = require('utils.class')
-local VectorUtils   = require('geometry.utils.vector')
 local GeometryUtils = require('geometry.utils.geometry')
 
 --- Defines the base class for obstacles with multiple edges.
 local PolyObstacle = TableUtils.class()
 
---- Initialises PolyObstacle instances.
+--- Initialises a PolyObstacle instances.
 function PolyObstacle:init(points)
     self.points = points
-    self.coordinates = VectorUtils.coordinates(points)
+    self.coordinates = {}
+    for _, vector in pairs(self.points) do
+        table.insert(self.coordinates, vector.x)
+        table.insert(self.coordinates, vector.y)
+    end
 end
 
---- Determines projection of given point on obstacle.
-function PolyObstacle:projection(point)
+--- Determines the nearest point on this obstacle to 'point'.
+function PolyObstacle:nearest(point)
     local closest_point = nil
     local closest_distance = 0
 

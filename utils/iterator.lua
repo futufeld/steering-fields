@@ -1,8 +1,7 @@
 -- Namespace for iterator functionality.
 local IteratorUtils = {}
 
---- Returns a function that returns pairs of consecutive elements in the given
--- array.
+--- Returns a function that returns pairs of consecutive elements in 'array'.
 function IteratorUtils.pairwise(array)
     local index = 0
     local count = #array
@@ -14,7 +13,7 @@ function IteratorUtils.pairwise(array)
         end
 end
 
---- Like 'pairwise', but treats the given array as a loop.
+--- Like 'pairwise', but treats 'array' as though it were a loop.
 function IteratorUtils.pairloop(array)
     local index = 0
     local count = #array

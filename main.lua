@@ -1,5 +1,3 @@
-local ColourCode = require('visual.colours')
-
 -- Set random number generator seed.
 math.randomseed(23052014)
 
@@ -31,18 +29,14 @@ function love.load(arg)
         world = require(scenarios[arg[2]])
 
         -- Configure window.
-        local window_flags = {}
-        window_flags['vsync'] = false
-        window_flags['fullscreen'] = false
-        love.window.setMode(world.width, world.height, window_flags)
-
-        -- Set graphical options.
-        love.filesystem.setIdentity('gax')
-        love.window.setTitle('GAX ' .. arg[2])
+        love.window.setMode(world.width, world.height, {})
+        love.window.setTitle('Steering fields ' .. arg[2])
+        love.filesystem.setIdentity('steering_fields')
+        love.graphics.setBackgroundColor({223, 236, 230, 255})
         love.graphics.setPointSize(5)
-        love.graphics.setBackgroundColor(ColourCode.background)
+        love.graphics.setLineWidth(5)
 
-        -- Print information that may be useful for user.
+        -- Print information that may be useful to the user.
         local dir = love.filesystem.getSaveDirectory()
         print(string.format('Save directory: %s', dir))
     end
@@ -50,13 +44,11 @@ end
 
 --- Callback for responding to user input through Love2D.
 function love.keypressed(key, isrepeat)
-    if key == 'escape' then
-        -- Quit the game.
-        love.event.quit()
-    end
+    -- Quit the application if the user presses the ESCAPE key.
+    if key == 'escape' then love.event.quit() end
 
+    -- Take a screenshot if the user presses the SPACE key.
     if key == 'space' then
-        -- Take a screenshot.
         local date = os.date('%d%m%Y-%H%M%S')
         local clock = os.clock()
         local name = string.format('%s_%s.png', date, clock)
@@ -67,8 +59,7 @@ end
 
 --- Callback for responding to the update step in Love2D's main loop.
 function love.update(delta_time)
-    delta_time = math.min(delta_time, 0.0167)
-    world:update(delta_time * 2)
+    world:update(math.min(delta_time, 0.0167) * 2)
 end
 
 --- Callback for responding to the drawing step in Love2D's main loop.

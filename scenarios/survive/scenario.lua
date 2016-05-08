@@ -3,61 +3,41 @@ local DiskObstacle    = require('geometry.disk')
 local PolygonObstacle = require('geometry.polygon')
 local Obstacle        = require('core.obstacle')
 local Vehicle         = require('core.vehicle')
-local Seek            = require('steering.seek')
-local Pursue          = require('steering.pursue')
+local Space           = require('core.space')
 local World           = require('core.world')
-local ColourCodes     = require('visual.colours')
 local ScenarioHelpers = require('scenarios.helpers')
 local Prey            = require('scenarios.survive.prey')
 local Predator        = require('scenarios.survive.predator')
 
--- Construct world.
-local world = World(true, 800, 600)
+-- Construct the environment.
+local width = 800
+local height = 600
+local space = Space.Toroidal(width, height)
+local world = World(800, 600)
 
-Seek.world = world
-Pursue.world = world
-
--- Declare tree creator function.
-local create_tree = function (position, radius, num)
-    local points = ScenarioHelpers.radial_points(Vector2(), radius, num)
-    return Obstacle('obstacle', position, PolygonObstacle(points))
-end
-
--- Declare obstacle geometry.
-local character_disk = DiskObstacle(5)
-
--- Set home for prey and predator characters.
-local home_position = Vector2()
-
--- Declare prey creator function.
-local create_prey = function (position)
-    local vehicle = Vehicle('prey', position, character_disk)
-    return Prey(ColourCodes.vehicle, vehicle, 150, home_position)
-end
-
--- Declare predator creator function.
-local create_predator = function (position)
-    local vehicle = Vehicle('predator', position, character_disk)
-    return Predator(ColourCodes.pursuer, vehicle, 200, home_position)
-end
-
--- Add trees.
-local radial_offset = 175
-local points = ScenarioHelpers.radial_points(Vector2(), radial_offset, 5)
-
-for _, point in pairs(points) do
+-- Add trees to the environment.
+for _, position in pairs(ScenarioHelpers.radial_points(Vector2(), 175, 5)) do
     local radius = 25 + math.random() * 12.5
-    world:add_obstacle(create_tree(point, radius, 7))
+    local points = ScenarioHelpers.radial_points(Vector2(), radius, 7)
+    obstacle = Obstacle(space, 'polygon', position, PolygonObstacle(points))
+    world:add_obstacle(obstacle)
 end
 
--- Add predator to world.
-world:add_character(create_predator(Vector2(-400, -300)))
+-- Crete the predator and add it to the environment.
+local disk = DiskObstacle(5)
+local vehicle = Vehicle(space, 'character2', Vector2(-375, 275), disk)
+world:add_character(Predator(vehicle, Vector2()))
 
--- Create prey and add to world.
-for i = 1, 25, 1 do
-    local position = Vector2.random(200 + math.random(100))
-    local prey = create_prey(position)
-    world:add_character(prey)
+-- Crete the prey and add them to the environment.
+for i = 1, 15, 1 do
+    local position = Vector2.random(225 + math.random(100))
+    vehicle = Vehicle(space, 'character1', position, disk)
+    world:add_character(Prey(vehicle, Vector2()))
+end
+for i = 1, 10, 1 do
+    local position = Vector2.random(50 + math.random(50))
+    vehicle = Vehicle(space, 'character1', position, disk)
+    world:add_character(Prey(vehicle, Vector2()))
 end
 
 return world

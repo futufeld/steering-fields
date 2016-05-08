@@ -1,68 +1,54 @@
 local TableUtils  = require('utils.class')
 local Vector2     = require('geometry.vector2')
-local VectorUtils = require('geometry.utils.vector')
-local GAX         = require('steering.gax')
+local Xetrov      = require('steering.xetrov')
 local Seek        = require('steering.seek')
 
---- Implements Escape steering behaviour.
+--- Implements the escape behaviour algorithm.
 local Escape = TableUtils.class(Seek)
 
 --- Initialises Escape class instances.
-function Escape:init(vehicle, pursuers)
-    Seek.init(self, vehicle, Vector2())
+function Escape:init(pursuers)
+    Seek.init(self, Vector2())
     self.pursuers = pursuers
 end
 
---- Escape-specific implementation for g(x).
-function Escape.gx(ratio)
-    return (1 - ratio)^2
-end
+--- Escape-specific implementation of g(d).
+function Escape.gx(ratio) return (1 - ratio)^2 end
 
---- Escape-specific implementation for h(x).
-function Escape.hx(ratio)
-    return ratio^0.5
-end
+--- Escape-specific implementation of h(d).
+function Escape.hx(ratio) return ratio^0.5 end
 
---- Returns the desired velocity of the vehicle if it is to escape its
--- pursuers.
-function Escape:desired_velocity()
-    -- Determine evaluation point.
-    local prediction = self.vehicle.velocity * 0.5
-    local point = self.vehicle.position + prediction
+--- Returns the escape desired velocity for 'vehicle'.
+function Escape:desired_velocity(vehicle)
+    -- Determine the point at which to evaluate the pursuer-only field.
+    local prediction = vehicle.velocity * 0.5
+    local point = vehicle.position + prediction
 
-    local max_distance = self.vehicle.max_force
-    local align = self.vehicle.heading:unit()
+    local range = vehicle.max_speed
+    local align = vehicle.heading
 
     -- Initialise pursuer information.
     local potentials = {}
-    self.position = Vector2()
+    self.goal = Vector2()
 
-    -- Calculate avoidance potentials.
     for _, pursuer in pairs(self.pursuers) do
-        -- Evaluate potential.
-        local potential = GAX.perturbation(
-            point, pursuer, align, max_distance, Escape.gx, Escape.hx)
+        -- Evaluate the potential produced by the pursuer.
+        local source = pursuer:source(point)
+        local potential = Xetrov.perturbation(vehicle.space, point,
+            source, align, range, Escape.gx, Escape.hx)
+        if potential then table.insert(potentials, potential) end
 
-        -- Add non-null potential.
-        if potential then
-            table.insert(potentials, potential)
-        end
-
-        -- Add pursuer position to accumulated position.
-        self.position = self.position + pursuer.position
+        -- Add the pursuer's position to accumulated position.
+        self.goal = self.goal + pursuer.position
     end
 
-    -- Determine avoidance force.
-    VectorUtils.sort_descending(potentials)
-    local avoid = GAX.priority_cap(potentials, 1)
+    -- Determine the desired velocity for fleeing the pursuers' mean position.
+    self.goal = self.goal / #self.pursuers
+    local desired = -Seek.desired_velocity(self, vehicle)
 
-    -- Determine flee force.
-    self.position = self.position / #self.pursuers
-    local flee = -Seek.desired_velocity(self)
-
-    -- Combine forces.
-    local ratio = 1 - avoid:len()
-    return avoid * self.vehicle.max_force + flee * ratio
+    -- Combine flee desired velocity with the xetrov field desired velocity.
+    local avoidance = Xetrov.field(potentials) * vehicle.max_force
+    return avoidance + desired * (vehicle.max_force - avoidance:len())
 end
 
 return Escape

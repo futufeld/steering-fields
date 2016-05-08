@@ -1,59 +1,42 @@
-local TableUtils      = require('utils.class')
 local Vector2         = require('geometry.vector2')
 local DiskObstacle    = require('geometry.disk')
 local SegSeqObstacle  = require('geometry.segseq')
 local Obstacle        = require('core.obstacle')
 local Vehicle         = require('core.vehicle')
-local Seek            = require('steering.seek')
-local SeekRay         = require('steering.seek_ray')
+local FollowPath      = require('steering.follow_path')
+local Space           = require('core.space')
 local World           = require('core.world')
-local ColourCodes     = require('visual.colours')
 local ScenarioHelpers = require('scenarios.helpers')
-local Panicker         = require('scenarios.panic.panicker')
+local Panicker        = require('scenarios.panic.panicker')
 
--- Construct world.
-local world = World(false, 800, 600)
+-- Construct the environment.
+local width = 800
+local height = 600
+local space = Space.Regular(width, height)
+local world = World(width, height)
 
-Seek.world = world
-
--- Construct room to escape.
+-- Construct the room to be escaped.
 local offset = 125
+local seq = { Vector2(-offset, -15),
+              Vector2(-offset, -offset),
+              Vector2( offset, -offset),
+              Vector2( offset,  offset),
+              Vector2(-offset,  offset),
+              Vector2(-offset,  15) }
+world:add_obstacle(Obstacle(space, 'segseq', Vector2(), SegSeqObstacle(seq)))
 
-local seq = {Vector2(-offset, -offset), Vector2(offset, -offset)}
-local obs1 = SegSeqObstacle(seq)
-world:add_obstacle(Obstacle('wall', Vector2(), obs1))
+-- Create panicked characters.
+local disk = DiskObstacle(5)
+local steering = FollowPath(Vector2(), Vector2(-10000, 0), 10)
 
-local seq = {Vector2(-offset, offset), Vector2(offset, offset)}
-local obs2 = SegSeqObstacle(seq)
-world:add_obstacle(Obstacle('wall', Vector2(), obs2))
-
-local seq = {Vector2(offset, -offset), Vector2(offset, offset)}
-local obs3 = SegSeqObstacle(seq)
-world:add_obstacle(Obstacle('wall', Vector2(), obs3))
-
-local seq = {Vector2(-offset, -offset), Vector2(-offset, -15)}
-local obs4 = SegSeqObstacle(seq)
-world:add_obstacle(Obstacle('wall', Vector2(), obs4))
-
-local seq = {Vector2(-offset, 15), Vector2(-offset, offset)}
-local obs5 = SegSeqObstacle(seq)
-world:add_obstacle(Obstacle('wall', Vector2(), obs5))
-
--- Create character obstacle.
-local character_disk = DiskObstacle(5)
-
--- Declare character creator function.
 local create_character = function (position)
-    local vehicle = Vehicle('character', position, character_disk, false)
-    vehicle:set_targets(10000, 50, 50)
-    vehicle.draw_tail = false
-
-    local character = Panicker(ColourCodes.vehicle, vehicle, 50, 5)
-    character:set_steering(SeekRay, {Vector2(), Vector2(-1, 0), 50})
-    return character
+    local vehicle = Vehicle(space, 'character1', position, disk, 50, 50)
+    local panicker = Panicker(vehicle, 5)
+    panicker.steering = steering
+    return panicker
 end
 
--- Populate corridor with characters.
+-- Populate room with characters.
 for _, position in pairs(ScenarioHelpers.radial_points(Vector2(), 90, 25)) do
     world:add_character(create_character(position))
 end

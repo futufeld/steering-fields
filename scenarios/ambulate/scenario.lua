@@ -5,87 +5,59 @@ local SegSeqObstacle = require('geometry.segseq')
 local Obstacle       = require('core.obstacle')
 local Vehicle        = require('core.vehicle')
 local Seek           = require('steering.seek')
+local Space          = require('core.space')
 local World          = require('core.world')
-local ColourCodes    = require('visual.colours')
 local Pedestrian     = require('scenarios.ambulate.pedestrian')
 
--- Construct world.
-local world = World(true, 800, 600)
+-- Construct the environment.
+local width = 800
+local height = 600
+local space = Space.Toroidal(width, height)
+local world = World(width, height)
 
-Seek.world = world
-
--- Construct pedestrian corridor.
+-- Construct a corridor and add it to the environment.
 local min_x = -world.width * 0.5
 local max_x =  world.width * 0.5
-local offset = 75
+local half_width = 75
 
-local obs1 = SegSeqObstacle({Vector2(min_x, offset), Vector2(max_x, offset)})
-world:add_obstacle(Obstacle('corridor', Vector2(), obs1))
+local pts = {Vector2(-min_x, 0), Vector2(-max_x, 0)}
 
-local obs2 = SegSeqObstacle({Vector2(min_x, -offset), Vector2(max_x, -offset)})
-world:add_obstacle(Obstacle('corridor', Vector2(), obs2))
+local wall1 = SegSeqObstacle(pts)
+world:add_obstacle(Obstacle(space, 'segseq', Vector2(0, half_width), wall1))
 
--- Define direction enumeration.
-local Direction = {}
-Direction.LEFT = 0
-Direction.RIGHT = 1
+local wall2 = SegSeqObstacle(pts)
+world:add_obstacle(Obstacle(space, 'segseq', Vector2(0, -half_width), wall2))
 
--- Declare obstacle geometry.
-local character_disk = DiskObstacle(5)
+-- Create pedestrians.
+local disk = DiskObstacle(5)
+local num_pedestrians = 40
+local gap = (max_x - min_x) / num_pedestrians
 
--- Declare pedestrian creator function.
-local create_pedestrian = function(position, direction)
-    -- Configure pedestrian based on intended direction of motion.
-    local colour = ColourCodes.vehicle
-    local point = Vector2(-10000, 0)
-    local obstacle_tag = 'left'
+for i = 0, num_pedestrians, 1 do
 
-    if direction == Direction.RIGHT then
-        colour = ColourCodes.pursuer
+    -- Determine a position for the pedestrian.
+    local offset = math.random(-100, 100) / 100
+    local position = Vector2(min_x + i * gap, offset * 0.8 * half_width)
+
+    -- Configure pedestrian based on its direction of motion.
+    local point = nil
+    local tag = nil
+
+    if math.random() < 0.5 then
         point = Vector2(10000, 0)
-        obstacle_tag = 'right'
+        tag = 'character1'
+    else
+        point = Vector2(-10000, 0)
+        tag = 'character2'
     end
 
-    -- Create vehicle.
-    local vehicle = Vehicle('pedestrian', position, character_disk)
-    speed = 20 + 10 * math.random()
-    rate = 3 + 3 * math.random()
-    vehicle:set_targets(rate, speed, speed)
+    -- Create pedestrian's vehicle.
+    local speed = 20 + 10 * math.random()
+    local vehicle = Vehicle(space, tag, position, disk, speed, speed)
 
     -- Create pedestrian.
-    local pedestrian = Pedestrian(colour, vehicle, 50, point)
-    pedestrian:set_steering(Seek, {point})
-    return pedestrian
-end
-
--- Declare function returning random direction.
-local randomDirection = function ()
-    if math.random() < 0.5 then
-        return Direction.LEFT
-    else
-        return Direction.RIGHT
-    end
-end
-
--- Declare function for generating pedestrian positions.
-local positionGenerator = function (numPedestrians)
-    local positions = {}
-    local y_direction = 1
-
-    local gap = (max_x - min_x) / numPedestrians
-
-    for i = 1,numPedestrians,1 do
-        local x = min_x + i * gap
-        local y = math.random(offset) * 0.8 * y_direction
-        table.insert(positions, Vector2(x, y))
-        y_direction = y_direction * -1
-    end
-    return positions
-end
-
--- Populate pedestrian corridor with pedestrians.
-for _, position in pairs(positionGenerator(40)) do
-    local pedestrian = create_pedestrian(position, randomDirection())
+    local pedestrian = Pedestrian(vehicle, 5, point)
+    pedestrian.steering = Seek(point)
     world:add_character(pedestrian)
 end
 
